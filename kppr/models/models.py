@@ -1,13 +1,15 @@
 from abc import abstractmethod
-import torch
-import torch.optim.lr_scheduler
-import torch.nn as nn
-import kppr.models.blocks as blocks
-import kppr.models.loss as pnloss
-from pytorch_lightning.core.lightning import LightningModule
 from copy import deepcopy
 
+import torch
+import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim.lr_scheduler
+from pytorch_lightning.core.lightning import LightningModule
+# pytorch_lightning.core.module.LightningModule # in v1.7+
+
+import kppr.models.blocks as blocks
+import kppr.models.loss as pnloss
 
 
 def getModel(model_name: str, config: dict, weights: str = None):
@@ -158,8 +160,6 @@ class KPPRNet(nn.Module):
         x = self.aggr(x, mask=m)
         x = F.normalize(x, dim=-1)
         return x
-
-
 
 
 class FeatureBank(nn.Module):

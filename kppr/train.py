@@ -1,10 +1,13 @@
-import click
-from os.path import join, dirname, abspath
 import subprocess
+from os.path import abspath, dirname, join
+
+import click
+import yaml
 from pytorch_lightning import Trainer
 from pytorch_lightning import loggers as pl_loggers
-from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint, ModelSummary
-import yaml
+from pytorch_lightning.callbacks import (LearningRateMonitor, ModelCheckpoint,
+                                         ModelSummary)
+
 import kppr.datasets.datasets as datasets
 import kppr.models.models as models
 
@@ -54,7 +57,7 @@ def main(config, data_config, weights, checkpoint):
                                              default_hp_metric=False)
 
     print('nr gpus:', cfg['train']['n_gpus'])
-    # Setup trainer
+    # Setup trainer, Trainer(accelerator='gpu', devices=1) # v1.7+
     trainer = Trainer(gpus=cfg['train']['n_gpus'],
                       logger=tb_logger,
                       resume_from_checkpoint=checkpoint,
@@ -63,7 +66,7 @@ def main(config, data_config, weights, checkpoint):
                       callbacks=[lr_monitor, checkpoint_saver, ModelSummary(max_depth=2)],)
 
     # Train!
-    trainer.fit(model,data)
+    trainer.fit(model, data)
 
 
 if __name__ == "__main__":
