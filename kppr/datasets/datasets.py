@@ -147,7 +147,7 @@ def loadNumpy(file, path=''):
     return np.load(os.path.join(path, file+'.npy'))[np.newaxis, ...].astype('float32')
 
 
-def pad(array, n_points=2000):
+def pad(array, n_points=4096): # 2000):
     """ array [n x m] -> [n_points x m]
     """
     if len(array.shape) == 2:
@@ -164,6 +164,8 @@ def pad(array, n_points=2000):
         mask = np.ones(size[:-1], dtype=bool)
         l = min(n_points, array.shape[-2])
         out[..., :l, :] = array[..., :l, :]
+        # for PointTransformerNet
+        out = out.squeeze(axis=0)
         mask[..., :l] = False
         return out, mask
 

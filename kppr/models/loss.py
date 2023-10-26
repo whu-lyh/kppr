@@ -1,5 +1,5 @@
-import torch.nn as nn
 import torch
+import torch.nn as nn
 
 
 def repulsion_loss(sim_ap: torch.Tensor, sim_an: torch.Tensor, is_neg, max_dist=1):

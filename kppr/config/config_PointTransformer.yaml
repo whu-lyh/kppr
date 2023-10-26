@@ -1,0 +1,31 @@
+experiment:
+    id: point_trans
+
+##Training
+train:
+    n_gpus: 1
+    max_epoch: 30
+    lr: 0.00001
+
+loss:
+    type: entropy
+    params:
+        margin: 0.5
+        alpha: 0.3
+
+##Network
+feature_bank: 15000
+network_architecture: KPPR
+
+PointTransformer:
+    trans_dim: 384 # the dimension of feature from transfomer blocks
+    depth: 6 
+    drop_path_rate: 0.1 
+    num_heads: 6
+    group_size: 32
+    num_group: 4096
+    emb_encoder_dim: 256 # the point path token dimension
+    num_classes: 1000
+    global_pool: avg
+    class_token: False # bind with global_pool
+    fc_norm: False

@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from copy import deepcopy
 
 import torch
@@ -9,6 +8,7 @@ from pytorch_lightning.core.lightning import LightningModule
 # pytorch_lightning.core.module.LightningModule # in v1.7+
 
 import kppr.models.blocks as blocks
+import kppr.models.PointTransformer as ptformer
 import kppr.models.loss as pnloss
 
 
@@ -43,7 +43,8 @@ class KPPR(LightningModule):
         self.pnloss = pnloss.EntropyContrastiveLoss(
             **hparams['loss']['params'])
         # Networks
-        self.q_model = KPPRNet(hparams)
+        # self.q_model = KPPRNet(hparams)
+        self.q_model = PointTransformerNet(hparams)
         self.k_model = deepcopy(self.q_model)
         self.k_model.requires_grad_(False)
         self.alpha = 0.999
@@ -161,6 +162,24 @@ class KPPRNet(nn.Module):
         x = F.normalize(x, dim=-1)
         return x
 
+class PointTransformerNet(nn.Module):
+    def __init__(self, hparams) -> None:
+        super().__init__()
+        # PointTransformer
+        self.pc_encoder = ptformer.PointTransformer(hparams['PointTransformer'])
+        pc_width = hparams['PointTransformer']['trans_dim']
+        embed_dim = hparams['PointTransformer']['emb_encoder_dim']
+        # project the pc feature to fix dimension
+        self.pc_proj = nn.Linear(pc_width, embed_dim)
+ 
+    def forward(self, x, m):
+        coords = x[..., :3].squeeze(dim=1).clone()
+        # feed raw xyz pc into pc encoder
+        pc_embeds = self.pc_encoder(coords)
+        # normalize the image global feature
+        # print("pc_embeds.size(): ", pc_embeds.size())
+        pc_global_feat = F.normalize(self.pc_proj(pc_embeds), dim=-1)
+        return pc_global_feat
 
 class FeatureBank(nn.Module):
     def __init__(self, size, f_dim) -> None:
@@ -190,6 +209,8 @@ class FeatureBank(nn.Module):
         t = self.idx < 0
         dx = idx[..., self.idx]
         dx[..., t] = False
+        # for PointTransformerNet
+        dx = dx.squeeze(axis=0)
         return self.fb, dx
 
 

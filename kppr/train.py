@@ -18,7 +18,7 @@ import kppr.models.models as models
               '-c',
               type=str,
               help='path to the config file (.yaml)',
-              default=join(dirname(abspath(__file__)), 'config/config.yaml'))
+              default=join(dirname(abspath(__file__)), 'config/config_PointTransformer.yaml'))
 @click.option('--data_config',
               '-dc',
               type=str,
@@ -34,6 +34,7 @@ import kppr.models.models as models
               type=str,
               help='path to checkpoint file (.ckpt) to resume training.',
               default=None)
+
 def main(config, data_config, weights, checkpoint):
     cfg = yaml.safe_load(open(config))
     data_cfg = yaml.safe_load(open(data_config))

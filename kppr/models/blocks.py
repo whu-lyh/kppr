@@ -99,7 +99,6 @@ class PointNetFeat(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.bn1(self.conv1(x)))
-
         if self.feature_transform:
             trans_feat = self.fstn(x)
             x = torch.matmul(x, trans_feat)

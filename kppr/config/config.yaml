@@ -4,7 +4,7 @@ experiment:
 ##Training
 train:
     n_gpus: 1
-    max_epoch: 30
+    max_epoch: 40
     lr: 0.00001
 
 loss:
