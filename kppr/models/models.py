@@ -5,11 +5,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim.lr_scheduler
 from pytorch_lightning.core.lightning import LightningModule
-# pytorch_lightning.core.module.LightningModule # in v1.7+
 
 import kppr.models.blocks as blocks
-import kppr.models.PointTransformer as ptformer
 import kppr.models.loss as pnloss
+import kppr.models.PointTransformer as ptformer
+
+# import pytorch_lightning.core.module.LightningModule # in v1.7+
 
 
 def getModel(model_name: str, config: dict, weights: str = None):
@@ -29,6 +30,7 @@ def getModel(model_name: str, config: dict, weights: str = None):
         print(weights)
         return eval(model_name).load_from_checkpoint(weights, hparams=config)
 
+
 ##################################
 # Base Class
 ##################################
@@ -44,15 +46,14 @@ class KPPR(LightningModule):
             **hparams['loss']['params'])
         # Networks
         # self.q_model = KPPRNet(hparams)
+        # for PointTransformerNet
         self.q_model = PointTransformerNet(hparams)
         self.k_model = deepcopy(self.q_model)
         self.k_model.requires_grad_(False)
         self.alpha = 0.999
 
-        self.feature_bank = FeatureBank(
-            size=hparams['feature_bank'], f_dim=256)
-        self.feature_bank_val = FeatureBank(
-            size=5000, f_dim=256)
+        self.feature_bank = FeatureBank(size=hparams['feature_bank'], f_dim=256)
+        self.feature_bank_val = FeatureBank(size=5000, f_dim=256)
 
         self.data_module = data_module
 
@@ -71,13 +72,11 @@ class KPPR(LightningModule):
                 param_k.data = param_k.data * self.alpha + \
                     param_q.data * (1. - self.alpha)
 
-            positives = self.k_model(
-                batch['positives'], batch['positives_mask'])
-            negatives, is_negative = self.feature_bank.getFeatures(
-                batch['neg_idx'])
+            positives = self.k_model(batch['positives'], batch['positives_mask'])
+            negatives, is_negative = self.feature_bank.getFeatures(batch['neg_idx'])
 
-        loss, losses = self.getLoss(
-            query, positives, negatives, is_neg=is_negative)
+        loss, losses = self.getLoss(query, positives, negatives, is_neg=is_negative)
+        # the former positives are added into feature bank and treated as negatives
         self.feature_bank.addFeatures(positives, batch['pos_idx'])
 
         for k, v in losses.items():
@@ -93,11 +92,10 @@ class KPPR(LightningModule):
     def validation_step(self, batch: dict, batch_idx):
         query = self.forward(batch['query'], batch['query_mask'])
         positives = self.forward(batch['positives'], batch['positives_mask'])
-        negatives, is_negative = self.feature_bank_val.getFeatures(
-            batch['neg_idx'])
+        negatives, is_negative = self.feature_bank_val.getFeatures(batch['neg_idx'])
 
-        loss, losses = self.getLoss(
-            query, positives, negatives, is_neg=is_negative)
+        loss, losses = self.getLoss(query, positives, negatives, is_neg=is_negative)
+        # the former positives are added into feature bank and treated as negatives
         self.feature_bank_val.addFeatures(positives, batch['pos_idx'])
 
         self.log('val_loss', loss)
@@ -137,16 +135,15 @@ class KPPR(LightningModule):
 ######################### Perceiver ###################################################
 #######################################################################################
 
+
 class KPPRNet(nn.Module):
     def __init__(self, hparams) -> None:
         super().__init__()
         # PointNet
-        self.pn = blocks.PointNetFeat(
-            **hparams['point_net'])
-
+        self.pn = blocks.PointNetFeat(**hparams['point_net'])
         # ConvNet
         self.conv = ConvNet(**hparams['kpconv'])
-
+        # VLADNet
         am = hparams['aggregation']['method']
         params = hparams['aggregation'][am]
         self.aggr = blocks.VladNet(**params)
@@ -155,12 +152,11 @@ class KPPRNet(nn.Module):
         coords = x[..., :3].clone()
         m = m.unsqueeze(-1)
         x = self.pn(x)
-
         x = self.conv(coords, x, m)
-
         x = self.aggr(x, mask=m)
         x = F.normalize(x, dim=-1)
         return x
+
 
 class PointTransformerNet(nn.Module):
     def __init__(self, hparams) -> None:
@@ -173,13 +169,17 @@ class PointTransformerNet(nn.Module):
         self.pc_proj = nn.Linear(pc_width, embed_dim)
  
     def forward(self, x, m):
-        coords = x[..., :3].squeeze(dim=1).clone()
+        coords = x[..., :3].clone()
+        B, M, N, C = coords.size()
+        coords = coords.view(-1, N, C)
         # feed raw xyz pc into pc encoder
         pc_embeds = self.pc_encoder(coords)
         # normalize the image global feature
         # print("pc_embeds.size(): ", pc_embeds.size())
         pc_global_feat = F.normalize(self.pc_proj(pc_embeds), dim=-1)
+        pc_global_feat = pc_global_feat.view(B, M, -1)
         return pc_global_feat
+
 
 class FeatureBank(nn.Module):
     def __init__(self, size, f_dim) -> None:
@@ -206,11 +206,13 @@ class FeatureBank(nn.Module):
 
     @torch.no_grad()
     def getFeatures(self, idx):
+        # self.idx 's size is size inside feature bank
         t = self.idx < 0
+        # is negative mask
+        # all the other positives especially the current idx(negative idx the size of feature bank) are treated as negatives
         dx = idx[..., self.idx]
+        # dx:BxFB
         dx[..., t] = False
-        # for PointTransformerNet
-        dx = dx.squeeze(axis=0)
         return self.fb, dx
 
 
@@ -240,6 +242,9 @@ class ConvNet(nn.Module):
         self.precompute_weights = precompute_weights
 
     def forward(self, coords: torch.Tensor, features: torch.Tensor, mask: torch.Tensor = None):
+        '''
+            # FIXME: mask for what?
+        '''
         if self.num_layer > 0:
             coords = coords.contiguous()
             coords[mask.expand_as(coords)] = 1e6

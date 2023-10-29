@@ -28,6 +28,9 @@ All the following commands should be run in `kppr/`
 - The pre-compressed point cloud maps can be downloaded [here](https://www.ipb.uni-bonn.de/html/projects/retriever/oxford_compressed.zip) and should be extracted to `data/` (or simply put a symbolic link).
 - For the uncompressed point clouds, I refer to [PointNetVLAD](https://github.com/mikacuy/pointnetvlad).
 
+## Notions
+The number of positives are not identical, e.g. for query index=3, there are 72 positives inside the 25m radius range, and the final positives are selected based on shuffle operation and desired number of positives.
+
 ## Citation
 
 If you use this library for any academic work, please cite the original paper.

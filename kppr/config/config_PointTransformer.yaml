@@ -10,8 +10,8 @@ train:
 loss:
     type: entropy
     params:
-        margin: 0.5
-        alpha: 0.3
+        margin: 0.5 # beta in the paper, the distance between the negative sample and query
+        alpha: 0.3 # weight balance infactor
 
 ##Network
 feature_bank: 15000
@@ -19,9 +19,9 @@ network_architecture: KPPR
 
 PointTransformer:
     trans_dim: 384 # the dimension of feature from transfomer blocks
-    depth: 6 
+    depth: 4 
     drop_path_rate: 0.1 
-    num_heads: 6
+    num_heads: 12
     group_size: 32
     num_group: 4096
     emb_encoder_dim: 256 # the point path token dimension

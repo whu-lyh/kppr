@@ -1,14 +1,16 @@
-import torch
-from torch.utils.data import Dataset, DataLoader
-from pytorch_lightning import LightningDataModule
-import pickle5
-import numpy as np
 import os
-import random
-import tqdm
-import kppr.utils.utils as utils
 import pickle
+import random
+
+import numpy as np
+import pickle5
+import torch
+import tqdm
 from diskcache import FanoutCache
+from pytorch_lightning import LightningDataModule
+from torch.utils.data import DataLoader, Dataset
+
+import kppr.utils.utils as utils
 
 
 def getOxfordDataModule(cfg):
@@ -48,8 +50,9 @@ class OxfordEmbeddingPad(Dataset):
 
     def __init__(self, query_dict, data_dir, num_pos=2, num_neg=18, return_only_query=False, get_negatives=False):
         super(Dataset, self).__init__()
-        self.query_keys, self.files, self.is_pos, self.is_neg = dict2bool(
-            query_dict)
+        # positives and negatives are predefined and sotred inside pickle file
+        # here convert these information into bool mask, used for loss calculation
+        self.query_keys, self.files, self.is_pos, self.is_neg = dict2bool(query_dict)
         self.data_dir = utils.DATA_DIR+data_dir
         self.num_pos = num_pos
         self.num_neg = num_neg
@@ -72,7 +75,7 @@ class OxfordEmbeddingPad(Dataset):
         query, query_mask = self.load_pc_file(self.files[index], self.data_dir)
         if self.return_only_query:
             return {'query': query, 'query_mask': query_mask, 'query_idx': index}
-
+        # fetch the positives based on the current index
         pos = np.where(self.is_pos[index, :])[0]
         np.random.shuffle(pos)
         pos_files = []
@@ -85,8 +88,7 @@ class OxfordEmbeddingPad(Dataset):
             pos_files.append(
                 self.files[pos[i % act_num_pos]])
             pos_idx.append(pos[i % act_num_pos])
-        positives, positives_mask = self.load_pc_files(
-            pos_files, self.data_dir)
+        positives, positives_mask = self.load_pc_files(pos_files, self.data_dir)
         neg_idx = self.is_neg[index, :]
 
         if self.get_negatives:
@@ -144,11 +146,16 @@ class OxfordEmbeddingPad(Dataset):
 
 
 def loadNumpy(file, path=''):
+    '''
+        return numpy size is 1 x num_pts x num_channel
+    '''
     return np.load(os.path.join(path, file+'.npy'))[np.newaxis, ...].astype('float32')
 
 
 def pad(array, n_points=4096): # 2000):
-    """ array [n x m] -> [n_points x m]
+    """ 
+        array [n x m] -> [n_points x m], where n is the original pts num
+        padding is used for the insufficient points, the mask indicates the pad points(true) and the original points(false)
     """
     if len(array.shape) == 2:
         out = np.zeros([n_points, array.shape[-1]], dtype='float32')
@@ -164,8 +171,7 @@ def pad(array, n_points=4096): # 2000):
         mask = np.ones(size[:-1], dtype=bool)
         l = min(n_points, array.shape[-2])
         out[..., :l, :] = array[..., :l, :]
-        # for PointTransformerNet
-        out = out.squeeze(axis=0)
+        # make the former l element as False
         mask[..., :l] = False
         return out, mask
 

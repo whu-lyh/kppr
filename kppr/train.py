@@ -38,16 +38,12 @@ import kppr.models.models as models
 def main(config, data_config, weights, checkpoint):
     cfg = yaml.safe_load(open(config))
     data_cfg = yaml.safe_load(open(data_config))
-    cfg['git_commit_version'] = str(subprocess.check_output(
-        ['git', 'rev-parse', '--short', 'HEAD']).strip())
     cfg['data_config'] = data_cfg
     print(f"Start experiment {cfg['experiment']['id']}")
     # Load data and model
     data = datasets.getOxfordDataModule(data_cfg)
 
-    model = models.getModel(
-        cfg['network_architecture'], config=cfg,
-        weights=weights)
+    model = models.getModel(cfg['network_architecture'], config=cfg, weights=weights)
     lr_monitor = LearningRateMonitor(logging_interval='step')
     checkpoint_saver = ModelCheckpoint(monitor='val/recall_1',
                                        filename='best_{epoch:02d}',
