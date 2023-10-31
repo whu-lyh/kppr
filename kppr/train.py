@@ -55,10 +55,11 @@ def main(config, data_config, weights, checkpoint):
 
     print('nr gpus:', cfg['train']['n_gpus'])
     # Setup trainer, Trainer(accelerator='gpu', devices=1) # v1.7+
-    trainer = Trainer(gpus=cfg['train']['n_gpus'],
+    trainer = Trainer(gpus=-1,
                       logger=tb_logger,
                       resume_from_checkpoint=checkpoint,
                       gradient_clip_val=0.2,
+                      precision=16,
                       max_epochs=cfg['train']['max_epoch'],
                       callbacks=[lr_monitor, checkpoint_saver, ModelSummary(max_depth=2)],)
 

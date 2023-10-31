@@ -2,6 +2,9 @@
 
 ## Installation
 
++ note that the version of pytorch should higher than 1.7.1, cause the pytorch_lightning requires higher version of pytorch(1.13.1 and 2.0.1 are ok)
++ pointnet_ops_lib could only be installed at CUDA 11.* FOR __point transformer backbone__
+
 1. Install all requirements: `pip install -r requirements.txt`
 2. Install this repository: `pip install -e .`
 
