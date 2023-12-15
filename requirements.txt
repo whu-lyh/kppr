@@ -8,4 +8,5 @@ opt_einsum==3.3.0
 pickle5==0.0.11
 PyYAML==6.0
 timm
+tensorboard
 # torch==1.12.1+cu116

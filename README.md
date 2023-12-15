@@ -34,6 +34,8 @@ All the following commands should be run in `kppr/`
 ## Notions
 The number of positives are not identical, e.g. for query index=3, there are 72 positives inside the 25m radius range, and the final positives are selected based on shuffle operation and desired number of positives.
 
++ do not change the name of the loggings, e.g. `version_4` to `version_xxxx`, which will crash the pytorch_lighting to find the proper dir automatically.
+
 ## Citation
 
 If you use this library for any academic work, please cite the original paper.

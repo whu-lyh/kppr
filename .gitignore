@@ -1,7 +1,7 @@
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,images
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,jupyternotebooks,images
-experiments/
+kppr/experiments/
 experiments
 data/
 data
