@@ -28,8 +28,8 @@ cache = FanoutCache(directory=utils.CONFIG_DIR+"../data/cache",
 
 
 @cache.memoize(typed=True)
-def dict2bool(query_dict):
-    with open(utils.DATA_DIR + query_dict, 'rb') as handle:
+def dict2bool(query_dict, data_dir):
+    with open(data_dir + query_dict, 'rb') as handle:
         query_dict = pickle5.load(handle)
     query_keys = list(query_dict.keys())
     n = len(query_keys)
@@ -52,8 +52,8 @@ class OxfordEmbeddingPad(Dataset):
         super(Dataset, self).__init__()
         # positives and negatives are predefined and sotred inside pickle file
         # here convert these information into bool mask, used for loss calculation
-        self.query_keys, self.files, self.is_pos, self.is_neg = dict2bool(query_dict)
-        self.data_dir = utils.DATA_DIR+data_dir
+        self.query_keys, self.files, self.is_pos, self.is_neg = dict2bool(query_dict, data_dir)
+        self.data_dir = data_dir
         self.num_pos = num_pos
         self.num_neg = num_neg
 

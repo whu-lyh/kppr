@@ -3,9 +3,9 @@ import torch
 
 CONFIG_DIR = os.path.dirname(
     os.path.realpath(__file__))+'/../config/'
-DATA_DIR = os.path.dirname(
-    os.path.realpath(__file__))+'/../data/'
-
+# DATA_DIR = os.path.dirname(
+#     os.path.realpath(__file__))+'/../data/'
+DATA_DIR = ""
 
 def knn(q_pts, s_pts, k, cosine_sim=False):
     if cosine_sim:

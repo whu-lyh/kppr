@@ -246,9 +246,9 @@ class PointTransformer(nn.Module):
         # token embedding dimension
         self.trans_dim = 384 # config.trans_dim
         # transformer block number
-        self.depth = 6# config.depth 
+        self.depth = 12# config.depth 
         self.drop_path_rate = 0.1 # config.drop_path_rate 
-        self.num_heads = 6 # config.num_heads
+        self.num_heads = 12 # config.num_heads
         # global_pool: Type of global pooling for final sequence (default: 'token')
         global_pool = 'avg' # config.global_pool
         # class_token: Use class token
@@ -265,7 +265,7 @@ class PointTransformer(nn.Module):
         # neighborhood point number
         self.group_size = 32 # config.group_size 
         # number of center
-        self.num_group = 4096 # config.num_group
+        self.num_group = 2000 # config.num_group
         # grouper
         self.group_divider = Group(num_group=self.num_group, group_size=self.group_size)
         # define the patch embedding encoder

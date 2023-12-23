@@ -1,13 +1,16 @@
+import os
+
 import click
+import numpy as np
 import torch
 import tqdm
+from torch.utils.data import DataLoader
+
 import kppr.datasets.datasets as datasets
 import kppr.models.models as models
-from torch.utils.data import DataLoader
-from kppr.utils import utils
-import numpy as np
-import os 
 from kppr.models import blocks
+from kppr.utils import utils
+
 
 def computeLatentVectors(data_loader, model):
     sequences = []
@@ -41,24 +44,28 @@ def computeLatentVectors(data_loader, model):
               default=utils.DATA_DIR+'oxford_compressed',
               help='dataset',
               required=True)
+
+
 def main(checkpoint, dataset, base_dir):
     model = models.KPPR.load_from_checkpoint(checkpoint_path=checkpoint).cuda()
     model.eval()
     
     database_file = f'{base_dir}/{dataset}_evaluation_database.pickle'
-    db_dataset = datasets.OxfordQueryEmbLoaderPad(
-        query_dict=database_file, data_dir=base_dir)
+    db_dataset = datasets.OxfordQueryEmbLoaderPad(query_dict=database_file, 
+                                                  data_dir=base_dir)
     database_loader = DataLoader(dataset=db_dataset, batch_size=1,
                                  shuffle=False, num_workers=0,)
-    db_seq, db_latents = computeLatentVectors(database_loader, model)
+    db_seq, db_latents = computeLatentVectors(database_loader, 
+                                              model)
     print(db_latents.shape, db_seq.shape)
 
     query_file = f'{base_dir}/{dataset}_evaluation_query.pickle'
-    q_dataset = datasets.OxfordQueryEmbLoaderPad(
-        query_dict=query_file, data_dir=base_dir)
+    q_dataset = datasets.OxfordQueryEmbLoaderPad(query_dict=query_file, 
+                                                 data_dir=base_dir)
     query_loader = DataLoader(dataset=q_dataset, batch_size=1,
                               shuffle=False, num_workers=0)
-    query_seq, query_latents = computeLatentVectors(query_loader, model)
+    query_seq, query_latents = computeLatentVectors(query_loader, 
+                                                    model)
 
     unique_seq = query_seq[:, 0].unique().tolist()
     print(unique_seq)
@@ -88,8 +95,7 @@ def main(checkpoint, dataset, base_dir):
                     if len(true_positives) < 1:
                         continue
                     num_pos += 1
-                    is_in = query_nn[scan_id:scan_id+1,
-                                     :] == true_positives.unsqueeze(1)
+                    is_in = query_nn[scan_id:scan_id+1, :] == true_positives.unsqueeze(1)
                     is_in = is_in.any(axis=0).cumsum(0).clamp(max=1)
                     in_top_k += is_in
                     in_one_pct += is_in[one_pct_idx]
@@ -99,13 +105,16 @@ def main(checkpoint, dataset, base_dir):
 
     top_k_recall /= counter
     top_one_pct_recall /= counter
-    print(top_k_recall)
-    print(top_one_pct_recall)
+    print("top_k_recall: ", top_k_recall)
+    print("top_one_pct_recall: ", top_one_pct_recall)
     out_f = os.path.dirname(os.path.abspath(checkpoint))
-    out_name = os.path.join(out_f, query_file.split('/')
-                            [-1].split('.')[0]+f'.txt')
-    np.savetxt(out_name, top_k_recall.cpu().numpy(), fmt='%.9f',
+    out_name = os.path.join(out_f, query_file.split('/')[-1].split('.')[0]+f'.txt')
+    np.savetxt(out_name, 
+               top_k_recall.cpu().numpy(), 
+               fmt='%.9f',
                header=f'#Top 1 percent recall:\n{top_one_pct_recall}\n#Top k:')
+    
+    
 if __name__ == "__main__":
     with torch.no_grad():
         main()

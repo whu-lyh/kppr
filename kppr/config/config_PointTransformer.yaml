@@ -1,5 +1,5 @@
 experiment:
-    id: point_trans2
+    id: point_trans
 
 ##Training
 train:

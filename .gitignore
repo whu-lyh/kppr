@@ -1,8 +1,9 @@
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,images
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,jupyternotebooks,images
-kppr/experiments/
-experiments
+#kppr/experiments/
+#experiments
+weights/
 data/
 data
 *.json
@@ -39,7 +40,7 @@ data
 *.webp
 
 # Portable Network Graphics
-*.png
+#*.png
 
 # Animated Portable Network Graphics
 *.apng

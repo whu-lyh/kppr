@@ -1,0 +1,36 @@
+PointTransformer:
+  class_token: false
+  depth: 6
+  drop_path_rate: 0.1
+  emb_encoder_dim: 256
+  fc_norm: false
+  global_pool: avg
+  group_size: 32
+  num_classes: 1000
+  num_group: 4096
+  num_heads: 12
+  trans_dim: 384
+batch_size: 2
+data_config:
+  batch_size: 2
+  data_dir: ../data/oxford_compressed/
+  dataset_loader: OxfordEmbeddingPad
+  get_negatives: false
+  num_negatives: 6
+  num_positives: 2
+  num_worker: 8
+  test_queries: oxford_compressed/test_queries_baseline.pickle
+  train_queries: oxford_compressed/training_queries_baseline.pickle
+experiment:
+  id: point_trans
+feature_bank: 15000
+loss:
+  params:
+    alpha: 0.3
+    margin: 0.5
+  type: entropy
+network_architecture: KPPR
+train:
+  lr: 1.0e-05
+  max_epoch: 30
+  n_gpus: 1

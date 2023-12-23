@@ -3,6 +3,6 @@ clear
 # cd kppr/models/extensions
 # sh ./install.sh
 # cd ../../..
-# pip install -e .
+pip install -e .
 cd kppr
 python train.py --config config/config_PointTransformer.yaml

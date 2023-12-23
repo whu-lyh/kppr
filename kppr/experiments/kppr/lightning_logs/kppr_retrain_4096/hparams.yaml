@@ -1,0 +1,43 @@
+aggregation:
+  method: vlad
+  vlad:
+    feature_dim: 256
+    nr_center: 64
+    out_dim: 256
+batch_size: 11
+data_config:
+  batch_size: 11
+  data_dir: ../data/oxford_compressed/
+  dataset_loader: OxfordEmbeddingPad
+  get_negatives: false
+  num_negatives: 18
+  num_positives: 2
+  num_worker: 8
+  test_queries: oxford_compressed/test_queries_baseline.pickle
+  train_queries: oxford_compressed/training_queries_baseline.pickle
+experiment:
+  id: tmp
+feature_bank: 15000
+git_commit_version: b'0708c1f'
+kpconv:
+  f_dscale: 2
+  in_channels: 256
+  kernel_size: 3
+  num_layer: 7
+  num_neighbors: 16
+  out_channels: 256
+  precompute_weights: true
+  radius: 0.05
+loss:
+  params:
+    alpha: 0.3
+    margin: 0.5
+  type: entropy
+network_architecture: KPPR
+point_net:
+  in_dim: 6
+  out_dim: 256
+train:
+  lr: 1.0e-05
+  max_epoch: 40
+  n_gpus: 1

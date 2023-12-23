@@ -8,7 +8,7 @@ from pytorch_lightning.core.lightning import LightningModule
 
 import kppr.models.blocks as blocks
 import kppr.models.loss as pnloss
-# import kppr.models.PointTransformer as ptformer
+import kppr.models.PointTransformer as ptformer
 
 # import pytorch_lightning.core.module.LightningModule # in v1.7+
 
@@ -45,9 +45,9 @@ class KPPR(LightningModule):
         self.pnloss = pnloss.EntropyContrastiveLoss(
             **hparams['loss']['params'])
         # Networks
-        self.q_model = KPPRNet(hparams)
+        # self.q_model = KPPRNet(hparams)
         # for PointTransformerNet
-        # self.q_model = PointTransformerNet(hparams)
+        self.q_model = PointTransformerNet(hparams)
         self.k_model = deepcopy(self.q_model)
         self.k_model.requires_grad_(False)
         self.alpha = 0.999
@@ -158,27 +158,27 @@ class KPPRNet(nn.Module):
         return x
 
 
-# class PointTransformerNet(nn.Module):
-#     def __init__(self, hparams) -> None:
-#         super().__init__()
-#         # PointTransformer
-#         self.pc_encoder = ptformer.PointTransformer(hparams['PointTransformer'])
-#         pc_width = hparams['PointTransformer']['trans_dim']
-#         embed_dim = hparams['PointTransformer']['emb_encoder_dim']
-#         # project the pc feature to fix dimension
-#         self.pc_proj = nn.Linear(pc_width, embed_dim)
+class PointTransformerNet(nn.Module):
+    def __init__(self, hparams) -> None:
+        super().__init__()
+        # PointTransformer
+        self.pc_encoder = ptformer.PointTransformer(hparams['PointTransformer'])
+        pc_width = hparams['PointTransformer']['trans_dim']
+        embed_dim = hparams['PointTransformer']['emb_encoder_dim']
+        # project the pc feature to fix dimension
+        self.pc_proj = nn.Linear(pc_width, embed_dim)
  
-#     def forward(self, x, m):
-#         coords = x[..., :3].clone()
-#         B, M, N, C = coords.size()
-#         coords = coords.view(-1, N, C)
-#         # feed raw xyz pc into pc encoder
-#         pc_embeds = self.pc_encoder(coords)
-#         # normalize the image global feature
-#         # print("pc_embeds.size(): ", pc_embeds.size())
-#         pc_global_feat = F.normalize(self.pc_proj(pc_embeds), dim=-1)
-#         pc_global_feat = pc_global_feat.view(B, M, -1)
-#         return pc_global_feat
+    def forward(self, x, m):
+        coords = x[..., :3].clone()
+        B, M, N, C = coords.size()
+        coords = coords.view(-1, N, C)
+        # feed raw xyz pc into pc encoder
+        pc_embeds = self.pc_encoder(coords)
+        # normalize the image global feature
+        # print("pc_embeds.size(): ", pc_embeds.size())
+        pc_global_feat = F.normalize(self.pc_proj(pc_embeds), dim=-1)
+        pc_global_feat = pc_global_feat.view(B, M, -1)
+        return pc_global_feat
 
 
 class FeatureBank(nn.Module):

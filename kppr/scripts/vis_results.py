@@ -1,26 +1,33 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import kppr.utils.utils as utils
 import glob
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import kppr.utils.utils as utils
 
 if __name__ == '__main__':
-    vis_all = False
+    """
+         plot whole *.txt in a figure
+    """
+    vis_all = True
 
     exp_dir = utils.CONFIG_DIR+'../experiments/'
-    eval_files = glob.glob(exp_dir+'**/oxford_evaluation_query.txt',recursive=True)
+    # eval_files = glob.glob(exp_dir+'**/oxford_evaluation_query.txt', recursive=True)
+    eval_files = glob.glob('/workspace/WorkSpacePR/kppr/kppr/experiments/**/oxford_evaluation_query.txt', recursive=True)
+    # print("Whole results files:")
+    # print(eval_files)
     plt.figure()
     plt.xlabel('in top k')
     plt.ylabel('recall')
     if vis_all:
         for f in eval_files:
-            label  = f.split('/')[-5:-2]
+            label  = f.split('/')[-2]
             d = np.loadtxt(f)
             plt.plot(np.arange(d.shape[0])+1,d,label=label)
     else:
         exp = {}
         for f in eval_files:
-            label  = f.split('/')[-5:-2]
+            label  = f.split('/')[-2]
             label = label[0]
             d = np.loadtxt(f)
 
@@ -34,4 +41,5 @@ if __name__ == '__main__':
             plt.plot(exp[k]['x'],exp[k]['y'],label=exp[k]['label'])
     plt.legend()
     plt.grid()
-    plt.show()
+    plt.savefig("./recall_curve.png")
+    # plt.show()
